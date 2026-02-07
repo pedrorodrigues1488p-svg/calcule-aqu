@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Como Calcular Aqui - Calculadora Educacional</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24); 
+            background-size: 400% 400%; 
+            animation: gradientShift 10s ease infinite; 
+            font-family: 'Arial', sans-serif; 
+            cursor: none; /* Esconde o cursor padrão para o efeito */
+        }
+        @keyframes gradientShift { 
+            0% { background-position: 0% 50%; } 
+            50% { background-position: 100% 50%; } 
+            100% { background-position: 0% 50%; } 
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        #spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 50%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1; /* Atrás de tudo */
+            transition: none; /* Para movimento suave, mas opcional */
+        }
+        .calculator { 
+            max-width: 700px; 
+            margin: 50px auto; 
+            padding: 30px; 
+            background: rgba(255, 255, 255, 0.9); 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            border: 3px solid #ff6b6b; 
+            position: relative; /* Para garantir que fique acima do spotlight */
+            z-index: 1;
+        }
+        .btn-primary { background-color: #ff6b6b; border-color: #ff6b6b; }
+        .btn-primary:hover { background-color: #ff5252; }
+        .level-btn { margin: 5px; font-weight: bold; }
+        .easy { background-color: #51cf66; border-color: #51cf66; }
+        .medium { background-color: #ffd43b; border-color: #ffd43b; color: #000; }
+        .hard { background-color: #ff6b6b; border-color: #ff6b6b; }
+        .impossible { background-color: #9775fa; border-color: #9775fa; }
+        .step { margin-bottom: 10px; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #4ecdc4; }
+        .highlight { font-weight: bold; color: #ff6b6b; }
+        .quiz-section { margin-top: 20px; }
+        .quiz-problem { font-size: 1.2em; font-weight: bold; color: #495057; }
+        .feedback { margin-top: 10px; padding: 10px; border-radius: 5px; }
+        .correct { background-color: #d4edda; color: #155724; }
+        .incorrect { background-color: #f8d7da; color: #721c24; }
+        .correct-blink { background-color: #28a745; color: white; font-size: 1.5em; font-weight: bold; text-align: center; animation: blink 0.5s infinite; }
+        .incorrect-blink { background-color: #dc3545; color: white; font-size: 1.5em; font-weight: bold; text-align: center; animation: blink 0.5s infinite; }
+        .nav-tabs .nav-link.active { background-color: #ff6b6b; color: white; }
+    </style>
+</head>
+<body>
+    <div id="spotlight"></div> <!-- Elemento da luz que segue o mouse -->
+    <div class="container">
+        <div class="calculator">
+            <h1 class="text-center mb-4" style="color: #ff6b6b;">Como Calcular Aqui</h1>
+            <p class="text-center text-muted">Uma calculadora que ensina matemática passo a passo e testa seus conhecimentos!</p>
+            
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="calc-tab" data-bs-toggle="tab" data-bs-target="#calc" type="button" role="tab">Calculadora</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz" type="button" role="tab">Testes</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="myTabContent">
+                <!-- Calculadora Tab -->
+                <div class="tab-pane fade show active" id="calc" role="tabpanel">
+                    <form id="calcForm" class="mt-4">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="number" id="num1" class="form-control" placeholder="Primeiro número" required>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="operation" class="form-select">
+                                    <option value="+">Soma (+)</option>
+                                    <option value="-">Subtração (-)</option>
+                                    <option value="*">Multiplicação (×)</option>
+                                    <option value="/">Divisão (÷)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" id="num2" class="form-control" placeholder="Segundo número" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Calcular</button>
+                    </form>
+                    
+                    <div id="result" class="mt-4 alert alert-success" style="display: none;"></div>
+                    <div id="steps" class="mt-4" style="display: none;">
+                        <h4>Passo a Passo:</h4>
+                        <div id="stepList"></div>
+                    </div>
+                </div>
+                
+                <!-- Testes Tab -->
+                <div class="tab-pane fade" id="quiz" role="tabpanel">
+                    <div class="quiz-section">
+                        <h4>Escolha um Nível de Teste:</h4>
+                        <button class="btn level-btn easy" onclick="startQuiz('easy')">Fácil</button>
+                        <button class="btn level-btn medium" onclick="startQuiz('medium')">Médio</button>
+                        <button class="btn level-btn hard" onclick="startQuiz('hard')">Difícil</button>
+                        <button class="btn level-btn impossible" onclick="startQuiz('impossible')">Impossível</button>
+                        
+                        <div id="quizProblem" class="mt-4" style="display: none;">
+                            <p class="quiz-problem" id="problemText"></p>
+                            <input type="number" id="userAnswer" class="form-control" placeholder="Sua resposta">
+                            <button class="btn btn-primary mt-2" onclick="checkAnswer()">Verificar</button>
+                            <div id="quizFeedback" class="feedback mt-2" style="display: none;"></div>
+                            <button class="btn btn-secondary mt-2" onclick="nextProblem()" style="display: none;" id="nextBtn">Próximo Problema</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Efeito de luz seguindo o mouse
+        document.addEventListener('mousemove', function(e) {
+            const spotlight = document.getElementById('spotlight');
+            spotlight.style.left = (e.clientX - 100) + 'px'; // Centraliza o spotlight no mouse (metade da largura)
+            spotlight.style.top = (e.clientY - 100) + 'px';  // Centraliza o spotlight no mouse (metade da altura)
+        });
+
+        // Calculadora (mantido do código anterior)
+        document.getElementById('calcForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculate();
+        });
+
+        function calculate() {
+            const num1 = parseFloat(document.getElementById('num1').value);
+            const num2 = parseFloat(document.getElementById('num2').value);
+            const op = document.getElementById('operation').value;
+            let result, steps = [];
+
+            if (isNaN(num1) || isNaN(num2)) {
+                alert('Por favor, insira números válidos.');
+                return;
+            }
+
+            switch (op) {
+                case '+':
+                    result = num1 + num2;
+                    steps = [
+                        `1. Alinhe os números pelas unidades (ex.: ${num1} e ${num2}).`,
+                        `2. Some as unidades: ${num1 % 10} + ${num2 % 10} = ${(num1 + num2) % 10}.`,
+                        `3. Some as dezenas (se houver): ${Math.floor(num1 / 10)} + ${Math.floor(num2 / 10)} = ${Math.floor((num1 + num2) / 10)}.`,
+                        `4. Resultado final: ${result}. Pratique somando no papel para entender o empréstimo!`
+                    ];
+                    break;
+                case '-':
+                    result = num1 - num2;
+                    steps = [
+                        `1. Alinhe os números pelas unidades (ex.: ${num1} e ${num2}).`,
+                        `2. Subtraia as unidades: ${num1 % 10} - ${num2 % 10} = ${(num1 - num2) % 10}.`,
+                        `3. Subtraia as dezenas, emprestando 10 se necessário: ${Math.floor(num1 / 10)} - ${Math.floor(num2 / 10)} = ${Math.floor((num1 - num2) / 10)}.`,
+                        `4. Resultado final: ${result}. Lembre-se: empréstimo ajuda a "pegar emprestado" de casas maiores!`
+                    ];
+                    break;
+                case '*':
+                    result = num1 * num2;
+                    steps = [
+                        `1. Multiplique cada dígito do segundo número (${num2}) pelo primeiro (${num1}).`,
+                        `2. Exemplo: ${num1} × ${num2 % 10} = ${num1 * (num2 % 10)}; depois, multiplique por ${Math.floor(num2 / 10)} e adicione zeros à direita.`,
+                        `3. Some os produtos parciais para obter o total.`,
+                        `4. Resultado final: ${result}. Use uma grade ou coluna no papel para visualizar!`
+                    ];
+                    break;
+                case '/':
+                    if (num2 === 0) {
+                        result = 'Erro: Divisão por zero!';
+                        steps = ['Divisão por zero não é possível. Tente outro número!'];
+                    } else {
+                        result = (num1 / num2).toFixed(2);
+                        steps = [
+                            `1. Veja quantas vezes ${num2} cabe em ${num1} (divisão longa).`,
+                            `2. Subtraia o produto e repita com o resto.`,
+                            `3. Exemplo: ${num1} ÷ ${num2} = ${result} (aproximado se decimal).`,
+                            `4. Resultado final: ${result}. Pratique desenhando a divisão no papel!`
+                        ];
+                    }
+                    break;
+            }
+
+            document.getElementById('result').innerHTML = `<strong>Resultado: ${result}</strong>`;
+            document.getElementById('result').style.display = 'block';
+
+            const stepList = document.getElementById('stepList');
+            stepList.innerHTML = '';
+            steps.forEach(step => {
+                const div = document.createElement('div');
+                div.className = 'step';
+                div.innerHTML = step;
+                stepList.appendChild(div);
+            });
+            document.getElementById('steps').style.display = 'block';
+        }
+
+        // Testes (ajustado para nível fácil e piscar)
+        let currentLevel = '';
+        let correctAnswer = 0;
+        let timeLimit = 0;
+        let timer;
+        let currentProblem = {}; // Para armazenar o problema atual no fácil
+
+        function startQuiz(level) {
+            currentLevel = level;
+            document.getElementById('quizProblem').style.display = 'block';
+            generateProblem();
+        }
+
+        function generateProblem() {
+            let num1, num2, op, problemText;
+            switch (currentLevel) {
+                case 'easy':
+                    num1 = Math.floor(Math.random() * 10) + 1;
+                    num2 = Math.floor(Math.random() * 10) + 1;
+                    op = ['+', '-'][Math.floor(Math.random() * 2)];
+                    timeLimit = 30; // 30 segundos
+                    break;
+                case 'medium':
+                    num1 = Math.floor(Math.random() * 20) + 1;
+                    num2 = Math.floor(Math.random() * 20) + 1;
+                    op = ['*', '/'][Math.floor(Math.random() * 2)];
+                    timeLimit = 20;
+                    break;
+                case 'hard':
+                    num1 = Math.floor(Math.random() * 100) + 1;
+                    num2 = Math.floor(Math.random() * 100) + 1;
+                    op = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
+                    timeLimit = 15;
+                    break;
+                case 'impossible':
+                    num1 = Math.floor(Math.random() * 1000) + 1;
+                    num2 = Math.floor(Math.random() * 1000) + 1;
+                    op = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
+                    timeLimit = 10; // Muito rápido!
+                    break;
+            }
+
+            problemText = `${num1} ${op} ${num2} = ?`;
+            document.getElementById('problemText').innerText = problemText;
+            correctAnswer = eval(`${num1} ${op} ${num2}`);
+            currentProblem = { num1, num2, op, problemText }; // Armazena para fácil
+            document.getElementById('userAnswer').value = '';
+            document.getElementById('quizFeedback').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            // Timer
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                showBlinkFeedback('Tempo esgotado! Tente novamente.', 'incorrect');
+                if (currentLevel !== 'easy') {
+                    document.getElementById('nextBtn').style.display = 'block';
+                } else {
+                    // No fácil, permite tentar de novo no mesmo problema
+                    document.getElementById('userAnswer').value = '';
+                }
+            }, timeLimit * 1000);
+        }
+
+        function checkAnswer() {
+            const userAns = parseFloat(document.getElementById('userAnswer').value);
+            clearTimeout(timer);
+            if (userAns === correctAnswer) {
+                showBlinkFeedback('Correto', 'correct');
+                if (currentLevel === 'easy') {
+                    // No fácil, gera nova pergunta automaticamente após o piscar
+                    setTimeout(() => {
+                        generateProblem();
+                    }, 2000);
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('nextBtn').style.display = 'block';
+                    }, 2000);
+                }
+            } else {
+                showBlinkFeedback('Incorreto', 'incorrect');
+                if (currentLevel === 'easy') {
+                    // No fácil, permite tentar de novo no mesmo problema após piscar
+                    setTimeout(() => {
+                        document.getElementById('userAnswer').value = '';
+                        // Reinicia o timer para o mesmo problema
+                        timer = setTimeout(() => {
+                            showBlinkFeedback('Tempo esgotado! Tente novamente.', 'incorrect');
+                            document.getElementById('userAnswer').value = '';
+                        }, timeLimit * 1000);
+                    }, 2000);
+                } else {
+                    // Em outros níveis, mostra a resposta após piscar
+                    setTimeout(() => {
+                        document.getElementById('quizFeedback').innerHTML = `<strong>Incorreto. A resposta certa é ${correctAnswer}. Tente novamente!</strong>`;
+                        document.getElementById('quizFeedback').className = 'feedback incorrect';
+                        document.getElementById('quizFeedback').style.display = 'block';
+                        document.getElementById('nextBtn').style.display = 'block';
+                    }, 2000);
+                }
+            }
+        }
+
+        function showBlinkFeedback(text, type) {
+            const feedback = document.getElementById('quizFeedback');
+            feedback.innerHTML = `<strong>${text}</strong>`;
+            feedback.className = `feedback ${type}-blink`;
+            feedback.style.display = 'block';
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 2000);
+        }
+
+        function nextProblem() {
+            generateProblem();
+        }
+    </script>
+</body>
+</html>
